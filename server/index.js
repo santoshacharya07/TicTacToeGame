@@ -1,41 +1,41 @@
-//importing modules
-const { Socket } = require("dgram");
-const express =require("express");
-const http=require("http");
-const { mongo, default: mongoose, isObjectIdOrHexString } = require("mongoose");
-mongoose.set("strictQuery", false);
+//IMPORTS
+const exp = require("constants");
+const express=require("express");
+const http =require("http");
+const mongoose =require("mongoose");
 
-const app=express();
-const port = process.env.PORT || 3000;
-const server=http.createServer(app);
-var io=require("socket.io")(server);
-//middle ware 
+mongoose.set('strictQuery', false);
+
+//create a server
+const app =express();
+const port= process.env.PORT || 3000;
+var server =http.createServer(app);
+var io=require('socket.io').listen(server);
+// var io=require('socket.io')(server);
+
+//middle ware
 app.use(express.json());
 
-//  DB="mongodb+srv://cntoz:quantum99x@cluster0.xdovnso.mongodb.net/test";
+//connect to mongodb
+const DB="mongodb+srv://santosh:tictactoequantum@cluster0.bkai3ed.mongodb.net/?retryWrites=true&w=majority";
 
-// mangoose
-// .connect(DB)
-// .then(() => {
-//     console.log("Connection successful!");
-// }).catch((e)=>{
-//     console.log(e);
-// });
-uri="mongodb+srv://cntoz:quantum99x@cluster0.xdovnso.mongodb.net/?retryWrites=true&w=majority";
 
-io.on("connection", (socket)=>{
-    console.log("connected!!");
+// //listening to socket io events from the client or flutter code
+io.on("connection", (socket) => {
+console.log('connected');
+socket.on('createRoom',({nickname})=>{
+    console.log(nickname);
+})
 });
 
-
-async function connect(){
-    try{
-        await mongoose.connect(uri);
-        console.log("Connection successsfull!!");
-    }catch(error){console.error(error);}
-}
-connect();
-server.listen(port,"0.0.0.0",()=>{
-    console.log(`Server started and running on port ${port}`);
+mongoose.connect(DB).then(()=>{
+    console.log("Connection Successful!!")
+}).catch((e)=>{
+    console.log(e);
 });
 
+//Listen to server
+
+server.listen(port, "0.0.0.0",()=>{
+    console.log(`server started and running on port ${port}`)
+});

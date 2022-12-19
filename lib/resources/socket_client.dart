@@ -4,15 +4,16 @@ class SocketClient {
   IO.Socket? socket;
   static SocketClient? _instance;
 
-  SocketClient.internal() {
-    socket = IO.io('http://192.168.1.6:3000', <String, dynamic>{
+  SocketClient._internal() {
+    socket = IO.io('http://127.0.0.1:3000', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
     socket!.connect();
   }
+
   static SocketClient get instance {
-    _instance ??= SocketClient.internal();
+    _instance ??= SocketClient._internal();
     return _instance!;
   }
 }
