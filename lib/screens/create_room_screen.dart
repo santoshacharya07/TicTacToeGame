@@ -32,6 +32,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     return Scaffold(
       body: Responsive(
         child: Container(
@@ -47,7 +48,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                   Shadow(
                     blurRadius: 40,
                     color: Colors.blue,
-                  )
+                  ),
                 ],
                 text: 'Create Room',
                 fontSize: 70,
@@ -55,12 +56,14 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               SizedBox(height: size.height * 0.08),
               CustomTextField(
                 controller: _nameController,
-                hintText: 'Enter Your Nickname',
+                hintText: 'Enter your nickname',
               ),
               SizedBox(height: size.height * 0.045),
               CustomButton(
-                  onTap: () => _socketMethods.createRoom(_nameController.text),
-                  text: "Create")
+                  onTap: () => _socketMethods.createRoom(
+                        _nameController.text,
+                      ),
+                  text: 'Create'),
             ],
           ),
         ),

@@ -4,12 +4,12 @@ class CustomText extends StatelessWidget {
   final List<Shadow> shadows;
   final String text;
   final double fontSize;
-  const CustomText(
-      {Key? key,
-      required this.shadows,
-      required this.text,
-      required this.fontSize})
-      : super(key: key);
+  const CustomText({
+    Key? key,
+    required this.shadows,
+    required this.text,
+    required this.fontSize,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

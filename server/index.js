@@ -1,64 +1,131 @@
-//IMPORTS
-const exp = require("constants");
-const express=require("express");
-const http =require("http");
-const mongoose =require("mongoose");
+// importing modules
+const express = require("express");
+const http = require("http");
+const mongoose = require("mongoose");
 
-mongoose.set('strictQuery', false);
+const app = express();
+const port = process.env.PORT || 3000;
+var server = http.createServer(app);
+const Room = require("./models/room");
+var io=require('socket.io')(server);
 
-//create a server
-const app =express();
-const port= process.env.PORT || 3000;
-var server =http.createServer(app);
-const Room=require('./models/room');
-var io=require('socket.io').listen(server);
-
-// var io=require('socket.io')(server);
-
-//middle ware
+// middle ware
 app.use(express.json());
 
-//connect to mongodb
-const DB="mongodb+srv://santosh:tictactoequantum@cluster0.bkai3ed.mongodb.net/?retryWrites=true&w=majority";
+const DB =
+  "mongodb+srv://santosh:tictactoequantum@cluster0.bkai3ed.mongodb.net/?retryWrites=true&w=majority";
 
-
-// //listening to socket io events from the client or flutter code
 io.on("connection", (socket) => {
-console.log('connected!!');
-socket.on('createRoom',async ({nickname})=>{
+  console.log("connected!");
+  socket.on("createRoom", async ({ nickname }) => {
     console.log(nickname);
-try{
-//room is created 
-        let room=new Room();
-        let player={
-            socketId:socket.id,
-            nickname,
-            playerType:"X",
-        };
-        room.player.push(player);
-        room.turn=player;
-        room=await room.save();
-        console.log(room);
-        const roomId=room._id.toString();
-        socket.join(roomId);
-        //io -> send data to everyone 
-        // socket -> sending data to yourself
-        //tell our clinet room have been created got to nwxt page
-        io.to(roomId).emit("createRoomSuccess",room);
-    }catch(e){
-       console.log(e); 
+    try {
+      // room is created
+      let room = new Room();
+      let player = {
+        socketID: socket.id,
+        nickname,
+        playerType: "X",
+      };
+      room.player.push(player);
+      room.turn = player;
+      room = await room.save();
+      console.log(room);
+      const roomId = room._id.toString();
+
+      socket.join(roomId);
+      // io -> send data to everyone
+      // socket -> sending data to yourself
+      io.to(roomId).emit("createRoomSuccess", room);
+    } catch (e) {
+      console.log(e);
     }
-});
+  });
+
+  socket.on("joinRoom", async ({ nickname, roomId }) => {
+    try {
+      if (!roomId.match(/^[0-9a-fA-F]{24}$/)) {
+        socket.emit("errorOccurred", "Please enter a valid room ID.");
+        return;
+      }
+      let room = await Room.findById(roomId);
+
+      if (room.isJoin) {
+        let player = {
+          nickname,
+          socketID: socket.id,
+          playerType: "O",
+        };
+        socket.join(roomId);
+        room.player.push(player);
+        room.isJoin = false;
+        room = await room.save();
+        io.to(roomId).emit("joinRoomSuccess", room);
+        io.to(roomId).emit("updatePlayers", room.players);
+        io.to(roomId).emit("updateRoom", room);
+      } else {
+        socket.emit(
+          "errorOccurred",
+          "The game is in progress, try again later."
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  socket.on("tap", async ({ index, roomId }) => {
+    try {
+      let room = await Room.findById(roomId);
+
+      let choice = room.turn.playerType; // x or o
+      if (room.turnIndex == 0) {
+        room.turn = room.players[1];
+        room.turnIndex = 1;
+      } else {
+        room.turn = room.players[0];
+        room.turnIndex = 0;
+      }
+      room = await room.save();
+      io.to(roomId).emit("tapped", {
+        index,
+        choice,
+        room,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  socket.on("winner", async ({ winnerSocketId, roomId }) => {
+    try {
+      let room = await Room.findById(roomId);
+      let player = room.players.find(
+        (playerr) => playerr.socketID == winnerSocketId
+      );
+      player.points += 1;
+      room = await room.save();
+
+      if (player.points >= room.maxRounds) {
+        io.to(roomId).emit("endGame", player);
+      } else {
+        io.to(roomId).emit("pointIncrease", player);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  });
 });
 
-mongoose.connect(DB).then(()=>{
-    console.log("Connection Successful!!")
-}).catch((e)=>{
+mongoose
+  .connect(DB)
+  .then(() => {
+    console.log("Connection successful!");
+  })
+  .catch((e) => {
     console.log(e);
-});
+  });
 
-//Listen to server
-
-server.listen(port, "0.0.0.0",()=>{
-    console.log(`server started and running on port ${port}`)
+server.listen(port, "0.0.0.0", () => {
+  console.log(`Server started and running on port ${port}`);
 });

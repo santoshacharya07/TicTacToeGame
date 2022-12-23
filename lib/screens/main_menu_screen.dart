@@ -7,7 +7,8 @@ import '../widgets/custom_button.dart';
 
 class MainMenuScreen extends StatelessWidget {
   static String routeName = '/main-menu';
-  const MainMenuScreen({super.key});
+  const MainMenuScreen({Key? key}) : super(key: key);
+
   void createRoom(BuildContext context) {
     Navigator.pushNamed(context, CreateRoomScreen.routeName);
   }
@@ -27,9 +28,7 @@ class MainMenuScreen extends StatelessWidget {
               onTap: () => createRoom(context),
               text: 'Create Room',
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             CustomButton(
               onTap: () => joinRoom(context),
               text: 'Join Room',
